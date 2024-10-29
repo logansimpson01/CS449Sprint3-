@@ -122,12 +122,12 @@ class SOSGUI:
         self.game_logic = SOSGameLogic(self.board_size)
         self.game_logic.game_mode = self.game_mode.get()
         
-        # Calculate window size to fit all elements
+        # window size 
         board_pixel_size = self.cell_size * self.board_size
-        window_width = board_pixel_size + 100  # Add padding
-        window_height = board_pixel_size + 300  # Increased height to fit buttons
+        window_width = board_pixel_size + 100  
+        window_height = board_pixel_size + 300  
         
-        # Set window size and position it on screen
+        # Set window size and position 
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
         x = (screen_width - window_width) // 2
@@ -228,7 +228,7 @@ class SOSGUI:
         button_frame.grid(row=5, column=0, columnspan=4, pady=10)
 
         buttons = [
-            ("New Game", self.reset_game),  # Added New Game button that calls reset_game
+            ("New Game", self.reset_game),  
             ("Change Mode", self.change_game_mode)
         ]
 
@@ -308,38 +308,57 @@ class SOSGUI:
 
     def change_game_mode(self):
         dialog = Toplevel()
-        dialog.title("Change Game Mode")
+        dialog.title("Change Game Settings")
         dialog.transient(self.master)
         dialog.grab_set()
+    
         
-        # Center the dialog
-        dialog_width = 200
-        dialog_height = 150
+        dialog_width = 300
+        dialog_height = 250
         screen_width = dialog.winfo_screenwidth()
         screen_height = dialog.winfo_screenheight()
         x = (screen_width - dialog_width) // 2
         y = (screen_height - dialog_height) // 2
         dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
-        
-        new_mode = StringVar(value=self.game_mode.get())
-        
+    
+        # Game Mode Selection
         Label(dialog, text="Select Game Mode:", font=("Helvetica", 12)).pack(pady=10)
-        
-        Radiobutton(dialog, text="Simple Game", 
-                   variable=new_mode, value="Simple").pack()
-        Radiobutton(dialog, text="General Game", 
-                   variable=new_mode, value="General").pack()
-        
-        def apply_mode():
+        new_mode = StringVar(value=self.game_mode.get())
+        Radiobutton(dialog, text="Simple Game", variable=new_mode, value="Simple").pack()
+        Radiobutton(dialog, text="General Game", variable=new_mode, value="General").pack()
+    
+        # Board Size Selection
+        Label(dialog, text="Board Size (3-10):", font=("Helvetica", 12)).pack(pady=10)
+        size_var = IntVar(value=self.board_size)
+        size_scale = Scale(dialog, from_=3, to=10, orient=HORIZONTAL, variable=size_var)
+        size_scale.pack()
+    
+        def apply_settings():
+            # Update game mode
             self.game_mode.set(new_mode.get())
             self.game_logic.game_mode = new_mode.get()
-            # Update the game mode label
-            self.mode_label.config(text=f"Game Mode: {new_mode.get()}")
-            dialog.destroy()
-            # Reset the game when mode changes
-            self.reset_game()
         
-        Button(dialog, text="Apply", command=apply_mode,
+            # Update board size if changed
+            new_size = size_var.get()
+            if new_size != self.board_size:
+                self.board_size = new_size
+                self.game_logic = SOSGameLogic(self.board_size)
+                self.game_logic.game_mode = new_mode.get()
+            
+                
+                for widget in self.master.winfo_children():
+                    widget.destroy()
+                
+                
+                self.initialize_game()
+            else:
+                # Just update the mode label and reset the game
+                self.mode_label.config(text=f"Game Mode: {new_mode.get()}")
+                self.reset_game()
+            
+            dialog.destroy()
+    
+        Button(dialog, text="Apply", command=apply_settings,
                font=("Helvetica", 10), width=10).pack(pady=20)
 
     def restart_or_new_game(self, new_setup=False):
@@ -370,7 +389,7 @@ class SOSGUI:
         # Clear canvas
         self.canvas.delete("all")
         
-        # Reset game logic
+        
         self.game_logic.reset_game()
         
         # Redraw empty grid
@@ -402,3 +421,4 @@ if __name__ == "__main__":
     root = Tk()
     gui = SOSGUI(root)
     root.mainloop()
+
